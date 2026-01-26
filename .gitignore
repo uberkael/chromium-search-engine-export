@@ -1,4 +1,6 @@
 .vscode/
+.clj-kondo/
+.lsp/
 __pycache__/
 EdgeBien/
 EdgeMal/
