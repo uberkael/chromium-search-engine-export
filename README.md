@@ -21,6 +21,8 @@ pip install -r requirements.txt
 python main.py
 ```
 
+![App Screenshot](images/app.png)
+
 ### Select the browser
 
 ![Select browser](images/select.png)
@@ -36,7 +38,7 @@ with the name `engines.json`.
 
 ![alt text](images/import.png)
 
-The JSONfile must be in the same directory as the script,
+The JSON file must be in the same directory as the script,
 with the name `engines.json`.
 
 ## TODO
