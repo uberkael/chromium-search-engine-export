@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
 )
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont, QPalette, QColor, QColorConstants
+from PySide6.QtGui import QFont, QPalette, QColor, QColorConstants, QIcon
 
 import locations
 import utils
@@ -118,6 +118,7 @@ setup_dark_theme(app)
 
 win = QWidget()
 win.setWindowTitle("Browser Search Engines")
+win.setWindowIcon(QIcon("icon.png"))
 win.setMinimumSize(400, 200)
 
 main_layout = QVBoxLayout()
