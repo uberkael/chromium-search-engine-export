@@ -127,15 +127,15 @@ frame_layout = QVBoxLayout()
 frame_layout.setSpacing(10)
 
 label_warning = QLabel("Close Browser before import or export")
-label_warning.setFont(QFont("Arial", 14, QFont.Bold))
-label_warning.setAlignment(Qt.AlignCenter)
+label_warning.setFont(QFont("Arial", 14, QFont.Weight.Bold))
+label_warning.setAlignment(Qt.AlignmentFlag.AlignCenter)
 frame_layout.addWidget(label_warning)
 
 label_instructions = QLabel(
     "Export from Browser Web Data SQLite to a JSON file\n"
     "Import from a JSON file into a Browser Web Data SQLite"
 )
-label_instructions.setAlignment(Qt.AlignCenter)
+label_instructions.setAlignment(Qt.AlignmentFlag.AlignCenter)
 frame_layout.addWidget(label_instructions)
 
 bw_sel = QComboBox()
