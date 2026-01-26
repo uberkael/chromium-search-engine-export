@@ -27,6 +27,11 @@ LOCATIONS = {
         "darwin": "$HOME/Library/Application Support/Vivaldi",
         "linux": "$HOME/.config/vivaldi/Default"
     },
+    "opera": {
+        "windows": "%LOCALAPPDATA%\\Opera Software\\Opera Stable",
+        "darwin": "$HOME/Library/Application Support/com.operasoftware.Opera",
+        "linux": "$HOME/.config/opera"
+    },
 }
 
 
