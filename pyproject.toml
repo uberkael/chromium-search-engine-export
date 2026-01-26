@@ -6,6 +6,5 @@ readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
     "pytest>=8.3.4",
-    "sv-ttk>=2.6.0",
-    "tk>=0.1.0",
+    "PySide6>=6.6.0",
 ]

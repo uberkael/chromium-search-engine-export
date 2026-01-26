@@ -1,40 +1,57 @@
 #!/usr/bin/env python3
 
-import tkinter as tk
-from tkinter import filedialog, messagebox, ttk
-import sv_ttk
-import utils
+import sys
+from PySide6.QtWidgets import (
+    QApplication,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLabel,
+    QComboBox,
+    QPushButton,
+    QFileDialog,
+    QMessageBox,
+)
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont, QPalette, QColor
+
 import locations
+import utils
 
 
 def show_file_error():
-    messagebox.showerror("Error", "File not found.")
+    QMessageBox.critical(None, "Error", "File not found.")
 
 
 def show_empty_alert():
-    messagebox.showerror("Error",
-                         f"No data found in the backup file {utils.BACKUP_FILE}")
+    QMessageBox.critical(
+        None, "Error", f"No data found in the backup file {utils.BACKUP_FILE}"
+    )
 
 
 def show_success_export():
-    messagebox.showinfo(
+    QMessageBox.information(
+        None,
         "Success",
-        f"Search Engines exported successfully in {utils.BACKUP_FILE}")
+        f"Search Engines exported successfully in {utils.BACKUP_FILE}",
+    )
 
 
 def show_success_import(path):
-    messagebox.showinfo(
-        "Success",
-        f"Search Engines imported successfully in {path}")
+    QMessageBox.information(
+        None, "Success", f"Search Engines imported successfully in {path}"
+    )
 
 
 def importar():
     """Importa el JSON backup en el navegador seleccionado"""
-    path = locations.get_browser_path(bw_sel.get().strip())
-    file_path = filedialog.askopenfilename(initialfile="Web Data",
-                                           initialdir=path,
-                                           filetypes=[("Web Data SQLite",
-                                                       "Web\\ Data")])
+    path = locations.get_browser_path(bw_sel.currentText().strip())
+    file_path, _ = QFileDialog.getOpenFileName(
+        None,
+        "Select Web Data file",
+        path,
+        "Web Data SQLite (Web Data);;All Files (*)",
+    )
     if not file_path:
         show_file_error()
         return
@@ -49,16 +66,18 @@ def importar():
         utils.db_insertar_filas(file_path, filas)
         show_success_import(file_path)
     except Exception as e:
-        messagebox.showerror("Error", f"{e}")
+        QMessageBox.critical(None, "Error", f"{e}")
 
 
 def exportar(bw_sel):
     """Exporta Search Engines del navegador seleccionado en un archivo JSON"""
-    path = locations.get_browser_path(bw_sel.get().strip())
-    file_path = filedialog.askopenfilename(initialfile="Web Data",
-                                           initialdir=path,
-                                           filetypes=[("Web Data SQLite",
-                                                       "Web\\ Data")])
+    path = locations.get_browser_path(bw_sel.currentText().strip())
+    file_path, _ = QFileDialog.getOpenFileName(
+        None,
+        "Select Web Data file",
+        path,
+        "Web Data SQLite (Web Data);;All Files (*)",
+    )
     if not file_path:
         show_file_error()
         return
@@ -69,51 +88,82 @@ def exportar(bw_sel):
 
 
 def select_browser():
-    print(f"Browser: {bw_sel.get()}")
+    print(f"Browser: {bw_sel.currentText()}")
 
 
-win = tk.Tk()
-sv_ttk.set_theme("dark")
-style = ttk.Style()
-style.configure("TMenubutton", padding=(10, 5, 10, 5))
+def setup_dark_theme(app):
+    """Configura el tema oscuro usando Fusion style"""
+    app.setStyle("Fusion")
 
-win.geometry("400x200")
-win.title("Browser Search Engines")
+    dark_palette = QPalette()
+    dark_palette.setColor(QPalette.Window, QColor(53, 53, 53))
+    dark_palette.setColor(QPalette.WindowText, Qt.white)
+    dark_palette.setColor(QPalette.Base, QColor(35, 35, 35))
+    dark_palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
+    dark_palette.setColor(QPalette.ToolTipBase, QColor(25, 25, 25))
+    dark_palette.setColor(QPalette.ToolTipText, Qt.white)
+    dark_palette.setColor(QPalette.Text, Qt.white)
+    dark_palette.setColor(QPalette.Button, QColor(53, 53, 53))
+    dark_palette.setColor(QPalette.ButtonText, Qt.white)
+    dark_palette.setColor(QPalette.BrightText, Qt.red)
+    dark_palette.setColor(QPalette.Link, QColor(42, 130, 218))
+    dark_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
+    dark_palette.setColor(QPalette.HighlightedText, QColor(35, 35, 35))
 
-bw_sel = tk.StringVar()
+    app.setPalette(dark_palette)
 
-# Create a frame that holds both the label and the menu
-frame = tk.Frame(win)
-frame.pack(pady=10)
 
-# Place label above the menu
-label = tk.Label(frame,
-                 text="Close Browser before import or export",
-                 font=("Arial", 14, "bold"))
-label.pack(pady=(0, 10))
+app = QApplication(sys.argv)
+setup_dark_theme(app)
 
-label = tk.Label(frame,
-                 text=("Export from Browser Web Data SQLite to a JSON file\n"
-                       "Import from a JSON file into a Browser Web Data SQLite"))
-label.pack(pady=(0, 10))
+win = QWidget()
+win.setWindowTitle("Browser Search Engines")
+win.setMinimumSize(400, 200)
 
-bws = utils.add_spaces(locations.LOCATIONS.keys())
-menu = ttk.OptionMenu(frame,
-                      bw_sel, bws[0], *bws, command=lambda _: select_browser)
-menu.config(padding=(50, 5))
-menu.pack(anchor="center")
+main_layout = QVBoxLayout()
+main_layout.setSpacing(10)
 
-frame_botones = tk.Frame(win)
-frame_botones.pack(side=tk.BOTTOM, pady=10)
+frame_layout = QVBoxLayout()
+frame_layout.setSpacing(10)
 
-btn_export = ttk.Button(
-    frame_botones, text="Export from Browser", command=lambda: exportar(bw_sel)
+label_warning = QLabel("Close Browser before import or export")
+label_warning.setFont(QFont("Arial", 14, QFont.Bold))
+label_warning.setAlignment(Qt.AlignCenter)
+frame_layout.addWidget(label_warning)
+
+label_instructions = QLabel(
+    "Export from Browser Web Data SQLite to a JSON file\n"
+    "Import from a JSON file into a Browser Web Data SQLite"
 )
-btn_export.pack(side=tk.LEFT, padx=5)
+label_instructions.setAlignment(Qt.AlignCenter)
+frame_layout.addWidget(label_instructions)
 
-btn_import = ttk.Button(
-    frame_botones, text="Import into Browser", command=importar
-)
-btn_import.pack(side=tk.RIGHT, padx=5)
+bw_sel = QComboBox()
+bw_sel.addItems(list(locations.LOCATIONS.keys()))
+bw_sel.currentTextChanged.connect(select_browser)
+bw_sel.setMinimumHeight(35)
+frame_layout.addWidget(bw_sel)
 
-win.mainloop()
+main_layout.addLayout(frame_layout)
+main_layout.addStretch()
+
+buttons_layout = QHBoxLayout()
+buttons_layout.setSpacing(10)
+
+btn_export = QPushButton("Export from Browser")
+btn_export.clicked.connect(lambda: exportar(bw_sel))
+btn_export.setMinimumHeight(35)
+buttons_layout.addWidget(btn_export)
+
+btn_import = QPushButton("Import into Browser")
+btn_import.clicked.connect(importar)
+btn_import.setMinimumHeight(35)
+buttons_layout.addWidget(btn_import)
+
+main_layout.addLayout(buttons_layout)
+
+win.setLayout(main_layout)
+
+win.show()
+
+sys.exit(app.exec())

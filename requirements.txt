@@ -1,2 +1,2 @@
-sv-ttk
+PySide6
 pytest
