@@ -45,7 +45,7 @@ def show_success_import(path):
 
 def importar():
     """Importa el JSON backup en el navegador seleccionado"""
-    path = locations.get_browser_path(bw_sel.currentText().strip())
+    path = locations.get_browser_path(bw_sel.currentText().strip()) or ""
     file_path, _ = QFileDialog.getOpenFileName(
         None,
         "Select Web Data file",
@@ -71,7 +71,7 @@ def importar():
 
 def exportar(bw_sel):
     """Exporta Search Engines del navegador seleccionado en un archivo JSON"""
-    path = locations.get_browser_path(bw_sel.currentText().strip())
+    path = locations.get_browser_path(bw_sel.currentText().strip()) or ""
     file_path, _ = QFileDialog.getOpenFileName(
         None,
         "Select Web Data file",
