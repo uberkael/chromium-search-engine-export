@@ -2,6 +2,8 @@
 
 Tool for **Export/Import** search engines between **Chromium**-based **browsers**.
 
+<img src="images/icon.png" width="128">
+
 ## Use
 
 Using UV or Poetry:
@@ -21,18 +23,18 @@ python main.py
 
 ### Select the browser
 
-![Select browser](select.png)
+![Select browser](images/select.png)
 
 ### Export Search Engines to a JSON file
 
-![Export](export.png)
+![Export](images/export.png)
 
 The JSON file is saved in the same directory as the script,
 with the name `engines.json`.
 
 ### Import Search Engines from a JSON file
 
-![alt text](import.png)
+![alt text](images/import.png)
 
 The JSONfile must be in the same directory as the script,
 with the name `engines.json`.

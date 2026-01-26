@@ -118,7 +118,7 @@ setup_dark_theme(app)
 
 win = QWidget()
 win.setWindowTitle("Browser Search Engines")
-win.setWindowIcon(QIcon("icon.png"))
+win.setWindowIcon(QIcon("images/icon.png"))
 win.setMinimumSize(400, 200)
 
 main_layout = QVBoxLayout()
