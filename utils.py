@@ -4,21 +4,22 @@ import json
 BACKUP_FILE = 'engines.json'
 
 
-def print_filas(filas):
-    for fila in filas:
-        print(fila)
+def print_rows(rows):
+    """Print each row to stdout."""
+    for row in rows:
+        print(row)
 
 
 def db_read_keywords(database):
-    """Read from the search engine database"""
+    """Read rows from the search engine database's `keywords` table."""
     with sqlite3.connect(database) as conn:
         cursor = conn.cursor()
         cursor.execute('SELECT * FROM keywords;')
         return cursor.fetchall()
 
 
-def db_insertar_filas(database, filas):
-    """insert into the search engine"""
+def db_insert_rows(database, rows):
+    """Insert multiple rows into the search engine `keywords` table."""
     with sqlite3.connect(database) as conn:
         cursor = conn.cursor()
         cursor.executemany('''
@@ -29,35 +30,41 @@ def db_insertar_filas(database, filas):
                 suggest_url_post_params, image_url_post_params, new_tab_url, last_visited,
                 created_from_play_api, is_active, starter_pack_id, enforced_by_policy, featured_by_policy
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', filas)
+        ''', rows)
         conn.commit()
 
 
-def json_write(filas, f=BACKUP_FILE):
+def json_write(rows, f=BACKUP_FILE):
+    """Write rows to a JSON backup file."""
     with open(f, 'w') as f:
-        json.dump(filas, f)
+        json.dump(rows, f)
 
 
 def json_read(f=BACKUP_FILE):
+    """Read rows from a JSON backup file."""
     with open(f, 'r') as file:
-        filas = json.load(file)
-        return filas
+        rows = json.load(file)
+        return rows
 
 
-def comparar_datos(filas1, filas2):
-    if len(filas1) != len(filas2):
-        return False, "Las dimensiones externas no coinciden."
+def compare_data(rows1, rows2):
+    """Compare two 2D arrays (lists of rows).
 
-    for i in range(len(filas1)):
-        if len(filas1[i]) != len(filas2[i]):
-            return False, f"Las dimensiones internas no coinciden en la fila {i}."
+    Returns a tuple (bool, message)."""
+    if len(rows1) != len(rows2):
+        return False, "Outer dimensions do not match."
 
-        for j in range(len(filas1[i])):
-            if filas1[i][j] != filas2[i][j]:
-                return False, f"Diferencia encontrada en la fila {i}, columna {j}: {filas1[i][j]} != {filas2[i][j]}"
+    for i in range(len(rows1)):
+        if len(rows1[i]) != len(rows2[i]):
+            return False, f"Inner dimensions do not match at row {i}."
 
-    return True, "Los arrays son iguales."
+        for j in range(len(rows1[i])):
+            if rows1[i][j] != rows2[i][j]:
+                return False, f"Difference found at row {i}, column {j}: {rows1[i][j]} != {rows2[i][j]}"
+
+    return True, "The arrays are equal."
 
 
 def add_spaces(lista, spaces=5):
+    """Append `spaces` number of spaces to each string in `lista`."""
     return [item + ' ' * spaces for item in lista]

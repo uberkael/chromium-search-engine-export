@@ -43,8 +43,8 @@ def show_success_import(path):
     )
 
 
-def importar():
-    """Importa el JSON backup en el navegador seleccionado"""
+def import_into_browser():
+    """Import the JSON backup into the selected browser."""
     path = locations.get_browser_path(bw_sel.currentText().strip()) or ""
     file_path, _ = QFileDialog.getOpenFileName(
         None,
@@ -63,14 +63,14 @@ def importar():
         return
 
     try:
-        utils.db_insertar_filas(file_path, filas)
+        utils.db_insert_rows(file_path, filas)
         show_success_import(file_path)
     except Exception as e:
         QMessageBox.critical(None, "Error", f"{e}")
 
 
-def exportar(bw_sel):
-    """Exporta Search Engines del navegador seleccionado en un archivo JSON"""
+def export_from_browser(bw_sel):
+    """Export Search Engines from the selected browser to a JSON file."""
     path = locations.get_browser_path(bw_sel.currentText().strip()) or ""
     file_path, _ = QFileDialog.getOpenFileName(
         None,
@@ -92,7 +92,7 @@ def select_browser():
 
 
 def setup_dark_theme(app):
-    """Configura el tema oscuro usando Fusion style"""
+    """Configure the dark theme using the Fusion style."""
     app.setStyle("Fusion")
 
     dark_palette = QPalette()
@@ -151,12 +151,12 @@ buttons_layout = QHBoxLayout()
 buttons_layout.setSpacing(10)
 
 btn_export = QPushButton("Export from Browser")
-btn_export.clicked.connect(lambda: exportar(bw_sel))
+btn_export.clicked.connect(lambda: export_from_browser(bw_sel))
 btn_export.setMinimumHeight(35)
 buttons_layout.addWidget(btn_export)
 
 btn_import = QPushButton("Import into Browser")
-btn_import.clicked.connect(importar)
+btn_import.clicked.connect(import_into_browser)
 btn_import.setMinimumHeight(35)
 buttons_layout.addWidget(btn_import)
 
