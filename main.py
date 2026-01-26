@@ -140,7 +140,7 @@ label_instructions.setAlignment(Qt.AlignmentFlag.AlignCenter)
 frame_layout.addWidget(label_instructions)
 
 bw_sel = QComboBox()
-bw_sel.addItems(list(locations.LOCATIONS.keys()))
+bw_sel.addItems([b.capitalize() for b in locations.LOCATIONS.keys()])
 bw_sel.currentTextChanged.connect(select_browser)
 bw_sel.setMinimumHeight(35)
 frame_layout.addWidget(bw_sel)

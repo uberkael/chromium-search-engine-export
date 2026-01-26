@@ -37,5 +37,6 @@ LOCATIONS = {
 
 def get_browser_path(browser: str) -> str | None:
     system = platform.system().lower()
+    browser = browser.lower()
     if browser in LOCATIONS and system in LOCATIONS[browser]:
         return os.path.expandvars(LOCATIONS[browser][system])
