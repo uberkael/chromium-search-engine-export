@@ -32,6 +32,11 @@ LOCATIONS = {
         "darwin": "$HOME/Library/Application Support/com.operasoftware.Opera",
         "linux": "$HOME/.config/opera"
     },
+    "helium": {
+        "windows": "%LOCALAPPDATA%\\net.imput.helium\\User Data",
+        "darwin": "$HOME/Library/Application Support/net.imput.helium",
+        "linux": "$HOME/.config/net.imput.helium/Default"
+    },
 }
 
 
