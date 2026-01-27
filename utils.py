@@ -1,5 +1,6 @@
 import sqlite3
 import json
+import base64
 
 BACKUP_FILE = 'engines.json'
 
@@ -34,16 +35,47 @@ def db_insert_rows(database, rows):
         conn.commit()
 
 
+def bytes_to_base64(data):
+    """Convert bytes objects in nested structures to base64 strings."""
+    if isinstance(data, bytes):
+        return base64.b64encode(data).decode('utf-8')
+    elif isinstance(data, (list, tuple)):
+        return [bytes_to_base64(item) for item in data]
+    elif isinstance(data, dict):
+        return {key: bytes_to_base64(value) for key, value in data.items()}
+    else:
+        return data
+
+
+def base64_to_bytes(data):
+    """Convert base64 strings back to bytes objects in nested structures."""
+    if isinstance(data, str):
+        # Try to decode as base64, if it fails, return the original string
+        try:
+            return base64.b64decode(data)
+        except Exception:
+            return data
+    elif isinstance(data, list):
+        return [base64_to_bytes(item) for item in data]
+    elif isinstance(data, dict):
+        return {key: base64_to_bytes(value) for key, value in data.items()}
+    else:
+        return data
+
+
 def json_write(rows, f=BACKUP_FILE):
     """Write rows to a JSON backup file."""
-    with open(f, 'w') as f:
-        json.dump(rows, f)
+    # Convert any bytes objects to base64 strings
+    serializable_rows = bytes_to_base64(rows)
+    with open(f, 'w', encoding='utf-8') as file:
+        json.dump(serializable_rows, file, indent=2)
 
 
 def json_read(f=BACKUP_FILE):
     """Read rows from a JSON backup file."""
-    with open(f, 'r') as file:
+    with open(f, 'r', encoding='utf-8') as file:
         rows = json.load(file)
+        # rows = convert_base64_to_bytes(rows)
         return rows
 
 
