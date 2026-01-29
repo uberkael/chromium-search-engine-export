@@ -202,6 +202,13 @@ def handle_import_conflicts(file_path, filas):
     conflicts = []
     to_insert = []
     
+    def has_key_changes(old_row, new_row):
+        key_indices = {1, 2, 3, 4, 10}
+        for i in key_indices:
+            if i < len(old_row) and i < len(new_row) and old_row[i] != new_row[i]:
+                return True
+        return False
+    
     for row in filas:
         shortcut = row[2]
         url = row[4]
@@ -210,21 +217,21 @@ def handle_import_conflicts(file_path, filas):
             old_row_shortcut = get_row_by_shortcut(file_path, shortcut)
             old_row_url = get_row_by_url(file_path, url)
             if old_row_shortcut == old_row_url:  # Same entry
-                if old_row_shortcut != tuple(row):
+                if old_row_shortcut != tuple(row) and has_key_changes(old_row_shortcut, row):
                     conflicts.append(((shortcut, url), old_row_shortcut, row))
             else:
                 # Different entries, but both exist, perhaps conflict anyway? For now, treat as new or something.
                 # To keep simple, if both match same entry, conflict, else insert as new.
                 pass
         elif shortcut in existing_shortcuts or url in existing_urls:
-            # One matches, perhaps conflict if the other differs
+            # One matches, perhaps conflict if the other differs and key changes
             if shortcut in existing_shortcuts:
                 old_row = get_row_by_shortcut(file_path, shortcut)
-                if old_row[4] != url:  # URL differs
+                if old_row[4] != url and has_key_changes(old_row, row):  # URL differs and key changes
                     conflicts.append(((shortcut, url), old_row, row))
             if url in existing_urls:
                 old_row = get_row_by_url(file_path, url)
-                if old_row[2] != shortcut:  # Shortcut differs
+                if old_row[2] != shortcut and has_key_changes(old_row, row):  # Shortcut differs and key changes
                     conflicts.append(((shortcut, url), old_row, row))
         else:
             to_insert.append(row)
