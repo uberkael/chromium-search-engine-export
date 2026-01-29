@@ -55,41 +55,73 @@ def get_row_by_id(database, row_id):
         return cursor.fetchone()
 
 
+def get_row_by_shortcut(database, shortcut):
+    """Get a row by shortcut from keywords table."""
+    with sqlite3.connect(database) as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM keywords WHERE keyword = ?', (shortcut,))
+        return cursor.fetchone()
+
+
+def get_row_by_url(database, url):
+    """Get a row by url from keywords table."""
+    with sqlite3.connect(database) as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM keywords WHERE url = ?', (url,))
+        return cursor.fetchone()
+
+
+def get_existing_shortcuts(database):
+    """Get set of existing shortcuts from keywords table."""
+    with sqlite3.connect(database) as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT keyword FROM keywords')
+        return {row[0] for row in cursor.fetchall()}
+
+
+def get_existing_urls(database):
+    """Get set of existing urls from keywords table."""
+    with sqlite3.connect(database) as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT url FROM keywords')
+        return {row[0] for row in cursor.fetchall()}
+
+
 def db_insert_rows(database, rows, mode='ignore'):
     """Insert multiple rows into the search engine `keywords` table.
-    
+
     mode: 'ignore' to skip existing, 'replace' to update existing.
     """
     with sqlite3.connect(database) as conn:
         cursor = conn.cursor()
-        
+
         # Get the table schema to determine the number of columns
         cursor.execute('PRAGMA table_info(keywords);')
         columns_info = cursor.fetchall()
         column_names = [col[1] for col in columns_info]
         num_columns = len(column_names)
-        
+
         # Adjust rows to match the target database schema
         adjusted_rows = []
         for row in rows:
             row_list = list(row)
-            
+
             # If row has fewer columns than target, pad with NULL
             while len(row_list) < num_columns:
                 row_list.append(None)
-            
+
             # If row has more columns than target, truncate
             if len(row_list) > num_columns:
                 row_list = row_list[:num_columns]
-            
+
             adjusted_rows.append(tuple(row_list))
-        
+
         # Build the INSERT statement dynamically
         columns_str = ', '.join(column_names)
         placeholders = ', '.join(['?'] * num_columns)
-        
+
         or_clause = 'OR REPLACE' if mode == 'replace' else 'OR IGNORE'
-        
+
         cursor.executemany(f'''
             INSERT {or_clause} INTO keywords ({columns_str})
             VALUES ({placeholders})
@@ -162,24 +194,40 @@ def compare_data(rows1, rows2):
 def handle_import_conflicts(file_path, filas):
     """Prepare data for import and identify conflicts and new entries.
     
-    Returns: (to_insert, conflicts) where conflicts is list of (eid, old_row, new_row)
+    Returns: (to_insert, conflicts) where conflicts is list of ((shortcut, url), old_row, new_row)
     """
-    # Prepare data
-    new_rows = {row[0]: row for row in filas}
-    ids = list(new_rows.keys())
-    existing_ids = db_get_existing_ids(file_path, ids)
+    existing_shortcuts = get_existing_shortcuts(file_path)
+    existing_urls = get_existing_urls(file_path)
     
     conflicts = []
+    to_insert = []
     
-    for eid in existing_ids:
-        if eid in new_rows:
-            old_row = get_row_by_id(file_path, eid)
-            new_row = new_rows[eid]
-            if old_row != tuple(new_row):
-                conflicts.append((eid, old_row, new_row))
-    
-    # New entries
-    to_insert = [row for row in filas if row[0] not in existing_ids]
+    for row in filas:
+        shortcut = row[2]
+        url = row[4]
+        if shortcut in existing_shortcuts and url in existing_urls:
+            # Check if they belong to the same entry
+            old_row_shortcut = get_row_by_shortcut(file_path, shortcut)
+            old_row_url = get_row_by_url(file_path, url)
+            if old_row_shortcut == old_row_url:  # Same entry
+                if old_row_shortcut != tuple(row):
+                    conflicts.append(((shortcut, url), old_row_shortcut, row))
+            else:
+                # Different entries, but both exist, perhaps conflict anyway? For now, treat as new or something.
+                # To keep simple, if both match same entry, conflict, else insert as new.
+                pass
+        elif shortcut in existing_shortcuts or url in existing_urls:
+            # One matches, perhaps conflict if the other differs
+            if shortcut in existing_shortcuts:
+                old_row = get_row_by_shortcut(file_path, shortcut)
+                if old_row[4] != url:  # URL differs
+                    conflicts.append(((shortcut, url), old_row, row))
+            if url in existing_urls:
+                old_row = get_row_by_url(file_path, url)
+                if old_row[2] != shortcut:  # Shortcut differs
+                    conflicts.append(((shortcut, url), old_row, row))
+        else:
+            to_insert.append(row)
     
     return to_insert, conflicts
 
