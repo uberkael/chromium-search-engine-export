@@ -3,7 +3,7 @@ import locations
 
 
 def test_browser_names():
-    browsers = ["chrome", "chromium", "brave", "edge", "vivaldi", "opera"]
+    browsers = ["chrome", "chromium", "brave", "edge", "vivaldi", "opera", "helium"]
 
     for k in locations.LOCATIONS.keys():
         assert k in browsers
