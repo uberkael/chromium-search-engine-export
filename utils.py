@@ -32,7 +32,7 @@ def db_get_existing_ids(database, ids):
 
 
 def compare_rows(old_row, new_row):
-    """Compare two rows and return a diff string for key fields."""
+    """Compare two rows and return a diff string for key fields in HTML."""
     key_fields = {
         1: 'Name',
         2: 'Shortcut',
@@ -43,8 +43,8 @@ def compare_rows(old_row, new_row):
     diff = []
     for i, (o, n) in enumerate(zip(old_row, new_row)):
         if o != n and i in key_fields:
-            diff.append(f"{key_fields[i]}: {o} -> {n}")
-    return "\n".join(diff) if diff else "No key changes"
+            diff.append(f"<b>{key_fields[i]}:</b> <font color='red'>{o}</font> → <font color='green'>{n}</font>")
+    return "<br>".join(diff) if diff else "No key changes"
 
 
 def get_row_by_id(database, row_id):
