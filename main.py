@@ -70,22 +70,9 @@ def import_into_browser():
         show_empty_alert()
         return
 
-    # Prepare data
-    new_rows = {row[0]: row for row in filas}
-    ids = list(new_rows.keys())
-    existing_ids = utils.db_get_existing_ids(file_path, ids)
-    
+    to_insert, conflicts = utils.handle_import_conflicts(file_path, filas)
+
     to_replace = []
-    conflicts = []
-    
-    for eid in existing_ids:
-        if eid in new_rows:
-            old_row = utils.get_row_by_id(file_path, eid)
-            new_row = new_rows[eid]
-            if old_row != tuple(new_row):
-                conflicts.append((eid, old_row, new_row))
-    
-    # Handle each conflict
     for eid, old_row, new_row in conflicts:
         diff = utils.compare_rows(old_row, new_row)
         name_old = old_row[1] if old_row[1] else "Unknown"
@@ -102,10 +89,7 @@ def import_into_browser():
         response = msg_box.exec()
         if response == QMessageBox.StandardButton.Yes:
             to_replace.append(new_row)
-    
-    # New entries
-    to_insert = [row for row in filas if row[0] not in existing_ids]
-    
+
     try:
         if to_insert:
             utils.db_insert_rows(file_path, to_insert, 'ignore')

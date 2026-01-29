@@ -32,12 +32,19 @@ def db_get_existing_ids(database, ids):
 
 
 def compare_rows(old_row, new_row):
-    """Compare two rows and return a diff string."""
+    """Compare two rows and return a diff string for key fields."""
+    key_fields = {
+        1: 'Name',
+        2: 'Shortcut',
+        3: 'Favicon URL',
+        4: 'URL',
+        10: 'Suggest URL'
+    }
     diff = []
     for i, (o, n) in enumerate(zip(old_row, new_row)):
-        if o != n:
-            diff.append(f"Column {i}: {o} -> {n}")
-    return "\n".join(diff) if diff else "No changes"
+        if o != n and i in key_fields:
+            diff.append(f"{key_fields[i]}: {o} -> {n}")
+    return "\n".join(diff) if diff else "No key changes"
 
 
 def get_row_by_id(database, row_id):
@@ -150,6 +157,31 @@ def compare_data(rows1, rows2):
                 return False, f"Difference found at row {i}, column {j}: {rows1[i][j]} != {rows2[i][j]}"
 
     return True, "The arrays are equal."
+
+
+def handle_import_conflicts(file_path, filas):
+    """Prepare data for import and identify conflicts and new entries.
+    
+    Returns: (to_insert, conflicts) where conflicts is list of (eid, old_row, new_row)
+    """
+    # Prepare data
+    new_rows = {row[0]: row for row in filas}
+    ids = list(new_rows.keys())
+    existing_ids = db_get_existing_ids(file_path, ids)
+    
+    conflicts = []
+    
+    for eid in existing_ids:
+        if eid in new_rows:
+            old_row = get_row_by_id(file_path, eid)
+            new_row = new_rows[eid]
+            if old_row != tuple(new_row):
+                conflicts.append((eid, old_row, new_row))
+    
+    # New entries
+    to_insert = [row for row in filas if row[0] not in existing_ids]
+    
+    return to_insert, conflicts
 
 
 def add_spaces(lista, spaces=5):
