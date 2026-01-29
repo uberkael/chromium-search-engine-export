@@ -19,8 +19,40 @@ def db_read_keywords(database):
         return cursor.fetchall()
 
 
-def db_insert_rows(database, rows):
-    """Insert multiple rows into the search engine `keywords` table."""
+def db_get_existing_ids(database, ids):
+    """Check which ids already exist in the keywords table."""
+    if not ids:
+        return set()
+    with sqlite3.connect(database) as conn:
+        cursor = conn.cursor()
+        placeholders = ', '.join(['?'] * len(ids))
+        cursor.execute(f'SELECT id FROM keywords WHERE id IN ({placeholders})', ids)
+        existing = cursor.fetchall()
+        return {row[0] for row in existing}
+
+
+def compare_rows(old_row, new_row):
+    """Compare two rows and return a diff string."""
+    diff = []
+    for i, (o, n) in enumerate(zip(old_row, new_row)):
+        if o != n:
+            diff.append(f"Column {i}: {o} -> {n}")
+    return "\n".join(diff) if diff else "No changes"
+
+
+def get_row_by_id(database, row_id):
+    """Get a row by id from keywords table."""
+    with sqlite3.connect(database) as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM keywords WHERE id = ?', (row_id,))
+        return cursor.fetchone()
+
+
+def db_insert_rows(database, rows, mode='ignore'):
+    """Insert multiple rows into the search engine `keywords` table.
+    
+    mode: 'ignore' to skip existing, 'replace' to update existing.
+    """
     with sqlite3.connect(database) as conn:
         cursor = conn.cursor()
         
@@ -49,8 +81,10 @@ def db_insert_rows(database, rows):
         columns_str = ', '.join(column_names)
         placeholders = ', '.join(['?'] * num_columns)
         
+        or_clause = 'OR REPLACE' if mode == 'replace' else 'OR IGNORE'
+        
         cursor.executemany(f'''
-            INSERT OR IGNORE INTO keywords ({columns_str})
+            INSERT {or_clause} INTO keywords ({columns_str})
             VALUES ({placeholders})
         ''', adjusted_rows)
         conn.commit()

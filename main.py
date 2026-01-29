@@ -70,8 +70,47 @@ def import_into_browser():
         show_empty_alert()
         return
 
+    # Prepare data
+    new_rows = {row[0]: row for row in filas}
+    ids = list(new_rows.keys())
+    existing_ids = utils.db_get_existing_ids(file_path, ids)
+    
+    to_replace = []
+    conflicts = []
+    
+    for eid in existing_ids:
+        if eid in new_rows:
+            old_row = utils.get_row_by_id(file_path, eid)
+            new_row = new_rows[eid]
+            if old_row != tuple(new_row):
+                conflicts.append((eid, old_row, new_row))
+    
+    # Handle each conflict
+    for eid, old_row, new_row in conflicts:
+        diff = utils.compare_rows(old_row, new_row)
+        name_old = old_row[1] if old_row[1] else "Unknown"
+        shortcut_old = old_row[2] if old_row[2] else ""
+        name_new = new_row[1] if new_row[1] else "Unknown"
+        shortcut_new = new_row[2] if new_row[2] else ""
+        
+        msg_box = QMessageBox()
+        msg_box.setWindowTitle("Conflict Detected")
+        msg_box.setText(f"Entry ID {eid}:\n\nExisting: {name_old} ({shortcut_old})\nNew: {name_new} ({shortcut_new})\n\nChanges:\n{diff}")
+        msg_box.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        msg_box.button(QMessageBox.StandardButton.Yes).setText("Replace")
+        msg_box.button(QMessageBox.StandardButton.No).setText("Keep Existing")
+        response = msg_box.exec()
+        if response == QMessageBox.StandardButton.Yes:
+            to_replace.append(new_row)
+    
+    # New entries
+    to_insert = [row for row in filas if row[0] not in existing_ids]
+    
     try:
-        utils.db_insert_rows(file_path, filas)
+        if to_insert:
+            utils.db_insert_rows(file_path, to_insert, 'ignore')
+        if to_replace:
+            utils.db_insert_rows(file_path, to_replace, 'replace')
         show_success_import(file_path)
     except Exception as e:
         QMessageBox.critical(None, "Error", f"{e}")
