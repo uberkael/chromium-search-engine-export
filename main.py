@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+import os
 from PySide6.QtWidgets import (
     QApplication,
     QWidget,
@@ -45,11 +46,18 @@ def show_success_import(path):
 
 def import_into_browser():
     """Import the JSON backup into the selected browser."""
-    path = locations.get_browser_path(bw_sel.currentText().strip()) or ""
+    base_path = locations.get_browser_path(bw_sel.currentText().strip()) or ""
+
+    # Construct the full path to Web Data file
+    web_data_path = os.path.join(base_path, "Web Data") if base_path else ""
+
+    # If Web Data exists, use it as the pre-selected file; otherwise, use the directory
+    start_path = web_data_path if os.path.exists(web_data_path) else base_path
+
     file_path, _ = QFileDialog.getOpenFileName(
         None,
         "Select Web Data file",
-        path,
+        start_path,
         "Web Data SQLite (Web Data);;All Files (*)",
     )
     if not file_path:
@@ -71,11 +79,18 @@ def import_into_browser():
 
 def export_from_browser(bw_sel):
     """Export Search Engines from the selected browser to a JSON file."""
-    path = locations.get_browser_path(bw_sel.currentText().strip()) or ""
+    base_path = locations.get_browser_path(bw_sel.currentText().strip()) or ""
+
+    # Construct the full path to Web Data file
+    web_data_path = os.path.join(base_path, "Web Data") if base_path else ""
+
+    # If Web Data exists, use it as the pre-selected file; otherwise, use the directory
+    start_path = web_data_path if os.path.exists(web_data_path) else base_path
+
     file_path, _ = QFileDialog.getOpenFileName(
         None,
         "Select Web Data file",
-        path,
+        start_path,
         "Web Data SQLite (Web Data);;All Files (*)",
     )
     if not file_path:
