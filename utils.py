@@ -43,7 +43,7 @@ def compare_rows(old_row, new_row):
     diff = []
     for i, (o, n) in enumerate(zip(old_row, new_row)):
         if o != n and i in key_fields:
-            diff.append(f"<b>{key_fields[i]}:</b> <font color='red'>{o}</font> → <font color='green'>{n}</font>")
+            diff.append(f"<b>{key_fields[i]}:</b><br><span style='background-color:#ff0000;color:black;padding:2px'>{o}</span> → <span style='background-color:#0066cc;color:white;padding:2px'>{n}</span>")
     return "<br>".join(diff) if diff else "No key changes"
 
 
