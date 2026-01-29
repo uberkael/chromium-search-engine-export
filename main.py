@@ -48,13 +48,16 @@ def show_success_import(path):
 def handle_conflicts_dialogs(conflicts):
     """Show dialogs for each conflict and return rows to replace."""
     to_replace = []
-    for eid, old_row, new_row in conflicts:
+    for key, old_row, new_row in conflicts:
         diff = utils.compare_rows(old_row, new_row)
+        name = new_row[1] if new_row[1] else "Unknown"
+        url = new_row[4]
 
         msg_box = QMessageBox()
         msg_box.setWindowTitle("Conflict Detected")
         msg_box.setTextFormat(Qt.TextFormat.RichText)
-        text = f"""<p>Entry ID {eid}</p>
+        text = f"""<p>{name}</p>
+<p>{url}</p>
 <p>{diff}</p>"""
         msg_box.setText(text)
         msg_box.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
