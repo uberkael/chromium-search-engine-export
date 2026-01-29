@@ -23,15 +23,36 @@ def db_insert_rows(database, rows):
     """Insert multiple rows into the search engine `keywords` table."""
     with sqlite3.connect(database) as conn:
         cursor = conn.cursor()
-        cursor.executemany('''
-            INSERT OR IGNORE INTO keywords (
-                id, short_name, keyword, favicon_url, url, safe_for_autoreplace, originating_url,
-                date_created, usage_count, input_encodings, suggest_url, prepopulate_id, created_by_policy,
-                last_modified, sync_guid, alternate_urls, image_url, search_url_post_params,
-                suggest_url_post_params, image_url_post_params, new_tab_url, last_visited,
-                created_from_play_api, is_active, starter_pack_id, enforced_by_policy, featured_by_policy
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', rows)
+        
+        # Get the table schema to determine the number of columns
+        cursor.execute('PRAGMA table_info(keywords);')
+        columns_info = cursor.fetchall()
+        column_names = [col[1] for col in columns_info]
+        num_columns = len(column_names)
+        
+        # Adjust rows to match the target database schema
+        adjusted_rows = []
+        for row in rows:
+            row_list = list(row)
+            
+            # If row has fewer columns than target, pad with NULL
+            while len(row_list) < num_columns:
+                row_list.append(None)
+            
+            # If row has more columns than target, truncate
+            if len(row_list) > num_columns:
+                row_list = row_list[:num_columns]
+            
+            adjusted_rows.append(tuple(row_list))
+        
+        # Build the INSERT statement dynamically
+        columns_str = ', '.join(column_names)
+        placeholders = ', '.join(['?'] * num_columns)
+        
+        cursor.executemany(f'''
+            INSERT OR IGNORE INTO keywords ({columns_str})
+            VALUES ({placeholders})
+        ''', adjusted_rows)
         conn.commit()
 
 
