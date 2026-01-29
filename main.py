@@ -2,6 +2,7 @@
 
 import sys
 import os
+import signal
 from PySide6.QtWidgets import (
     QApplication,
     QWidget,
@@ -211,5 +212,7 @@ main_layout.addLayout(buttons_layout)
 win.setLayout(main_layout)
 
 win.show()
+
+signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 sys.exit(app.exec())
