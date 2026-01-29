@@ -79,10 +79,14 @@ def import_into_browser():
         shortcut_old = old_row[2] if old_row[2] else ""
         name_new = new_row[1] if new_row[1] else "Unknown"
         shortcut_new = new_row[2] if new_row[2] else ""
-        
+
         msg_box = QMessageBox()
         msg_box.setWindowTitle("Conflict Detected")
-        msg_box.setText(f"Entry ID {eid}:\n\nExisting: {name_old} ({shortcut_old})\nNew: {name_new} ({shortcut_new})\n\nChanges:\n{diff}")
+        msg_box.setTextFormat(Qt.TextFormat.RichText)
+        text = f"""<p>Entry ID {eid}</p>
+<p>{name_old} ({shortcut_old}) ▶️ {name_new} ({shortcut_new})</p>
+<p>{diff}</p>"""
+        msg_box.setText(text)
         msg_box.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         msg_box.button(QMessageBox.StandardButton.Yes).setText("Replace")
         msg_box.button(QMessageBox.StandardButton.No).setText("Keep Existing")
