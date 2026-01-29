@@ -50,13 +50,11 @@ def handle_conflicts_dialogs(conflicts):
     to_replace = []
     for eid, old_row, new_row in conflicts:
         diff = utils.compare_rows(old_row, new_row)
-        name_old = old_row[1] if old_row[1] else "Unknown"
 
         msg_box = QMessageBox()
         msg_box.setWindowTitle("Conflict Detected")
         msg_box.setTextFormat(Qt.TextFormat.RichText)
         text = f"""<p>Entry ID {eid}</p>
-<p>{name_old}</p>
 <p>{diff}</p>"""
         msg_box.setText(text)
         msg_box.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
