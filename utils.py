@@ -71,6 +71,14 @@ def get_row_by_url(database, url):
         return cursor.fetchone()
 
 
+def get_row_by_name(database, name):
+    """Get a row by name from keywords table."""
+    with sqlite3.connect(database) as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM keywords WHERE short_name = ?', (name,))
+        return cursor.fetchone()
+
+
 def get_existing_shortcuts(database):
     """Get set of existing shortcuts from keywords table."""
     with sqlite3.connect(database) as conn:
@@ -84,6 +92,14 @@ def get_existing_urls(database):
     with sqlite3.connect(database) as conn:
         cursor = conn.cursor()
         cursor.execute('SELECT url FROM keywords')
+        return {row[0] for row in cursor.fetchall()}
+
+
+def get_existing_names(database):
+    """Get set of existing names from keywords table."""
+    with sqlite3.connect(database) as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT short_name FROM keywords')
         return {row[0] for row in cursor.fetchall()}
 
 
@@ -194,10 +210,9 @@ def compare_data(rows1, rows2):
 def handle_import_conflicts(file_path, filas):
     """Prepare data for import and identify conflicts and new entries.
     
-    Returns: (to_insert, conflicts) where conflicts is list of ((shortcut, url), old_row, new_row)
+    Returns: (to_insert, conflicts) where conflicts is list of (key, old_row, new_row)
     """
     existing_shortcuts = get_existing_shortcuts(file_path)
-    existing_urls = get_existing_urls(file_path)
     
     conflicts = []
     to_insert = []
@@ -211,29 +226,16 @@ def handle_import_conflicts(file_path, filas):
     
     for row in filas:
         shortcut = row[2]
-        url = row[4]
-        if shortcut in existing_shortcuts and url in existing_urls:
-            # Check if they belong to the same entry
-            old_row_shortcut = get_row_by_shortcut(file_path, shortcut)
-            old_row_url = get_row_by_url(file_path, url)
-            if old_row_shortcut == old_row_url:  # Same entry
-                if old_row_shortcut != tuple(row) and has_key_changes(old_row_shortcut, row):
-                    conflicts.append(((shortcut, url), old_row_shortcut, row))
-            else:
-                # Different entries, but both exist, perhaps conflict anyway? For now, treat as new or something.
-                # To keep simple, if both match same entry, conflict, else insert as new.
-                pass
-        elif shortcut in existing_shortcuts or url in existing_urls:
-            # One matches, perhaps conflict if the other differs and key changes
-            if shortcut in existing_shortcuts:
-                old_row = get_row_by_shortcut(file_path, shortcut)
-                if old_row[4] != url and has_key_changes(old_row, row):  # URL differs and key changes
-                    conflicts.append(((shortcut, url), old_row, row))
-            if url in existing_urls:
-                old_row = get_row_by_url(file_path, url)
-                if old_row[2] != shortcut and has_key_changes(old_row, row):  # Shortcut differs and key changes
-                    conflicts.append(((shortcut, url), old_row, row))
-        else:
+        conflict_found = False
+        
+        # Check shortcut conflict
+        if shortcut and shortcut in existing_shortcuts:
+            old_row = get_row_by_shortcut(file_path, shortcut)
+            if has_key_changes(old_row, row):
+                conflicts.append((f"Shortcut: {shortcut}", old_row, row))
+                conflict_found = True
+        
+        if not conflict_found:
             to_insert.append(row)
     
     return to_insert, conflicts
