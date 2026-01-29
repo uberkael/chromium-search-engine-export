@@ -44,6 +44,29 @@ def show_success_import(path):
     )
 
 
+def handle_conflicts_dialogs(conflicts):
+    """Show dialogs for each conflict and return rows to replace."""
+    to_replace = []
+    for eid, old_row, new_row in conflicts:
+        diff = utils.compare_rows(old_row, new_row)
+        name_old = old_row[1] if old_row[1] else "Unknown"
+
+        msg_box = QMessageBox()
+        msg_box.setWindowTitle("Conflict Detected")
+        msg_box.setTextFormat(Qt.TextFormat.RichText)
+        text = f"""<p>Entry ID {eid}</p>
+<p>{name_old}</p>
+<p>{diff}</p>"""
+        msg_box.setText(text)
+        msg_box.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        msg_box.button(QMessageBox.StandardButton.Yes).setText("Replace")
+        msg_box.button(QMessageBox.StandardButton.No).setText("Keep Existing")
+        response = msg_box.exec()
+        if response == QMessageBox.StandardButton.Yes:
+            to_replace.append(new_row)
+    return to_replace
+
+
 def import_into_browser():
     """Import the JSON backup into the selected browser."""
     base_path = locations.get_browser_path(bw_sel.currentText().strip()) or ""
@@ -72,27 +95,7 @@ def import_into_browser():
 
     to_insert, conflicts = utils.handle_import_conflicts(file_path, filas)
 
-    to_replace = []
-    for eid, old_row, new_row in conflicts:
-        diff = utils.compare_rows(old_row, new_row)
-        name_old = old_row[1] if old_row[1] else "Unknown"
-        shortcut_old = old_row[2] if old_row[2] else ""
-        name_new = new_row[1] if new_row[1] else "Unknown"
-        shortcut_new = new_row[2] if new_row[2] else ""
-
-        msg_box = QMessageBox()
-        msg_box.setWindowTitle("Conflict Detected")
-        msg_box.setTextFormat(Qt.TextFormat.RichText)
-        text = f"""<p>Entry ID {eid}</p>
-<p>{name_old} ({shortcut_old}) ▶️ {name_new} ({shortcut_new})</p>
-<p>{diff}</p>"""
-        msg_box.setText(text)
-        msg_box.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
-        msg_box.button(QMessageBox.StandardButton.Yes).setText("Replace")
-        msg_box.button(QMessageBox.StandardButton.No).setText("Keep Existing")
-        response = msg_box.exec()
-        if response == QMessageBox.StandardButton.Yes:
-            to_replace.append(new_row)
+    to_replace = handle_conflicts_dialogs(conflicts)
 
     try:
         if to_insert:
