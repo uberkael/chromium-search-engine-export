@@ -31,6 +31,7 @@ def db_get_existing_ids(database, ids):
         return {row[0] for row in existing}
 
 
+
 def compare_rows(old_row, new_row):
     """Compare two rows and return a diff string for key fields in HTML."""
     key_fields = {
@@ -43,8 +44,35 @@ def compare_rows(old_row, new_row):
     diff = []
     for i, (o, n) in enumerate(zip(old_row, new_row)):
         if o != n and i in key_fields:
-            diff.append(f"<b>{key_fields[i]}:</b><br><span style='background-color:#ff0000;color:black;padding:2px'>{o}</span> → <span style='background-color:#0066cc;color:white;padding:2px'>{n}</span>")
-    return "<br>".join(diff) if diff else "No key changes"
+            # Find common prefix
+            prefix_len = 0
+            min_len = min(len(str(o)), len(str(n)))
+            for j in range(min_len):
+                if str(o)[j] == str(n)[j]:
+                    prefix_len += 1
+                else:
+                    break
+            
+            # Find common suffix
+            suffix_len = 0
+            o_str = str(o)
+            n_str = str(n)
+            for j in range(1, min(len(o_str) - prefix_len, len(n_str) - prefix_len) + 1):
+                if o_str[-j] == n_str[-j]:
+                    suffix_len += 1
+                else:
+                    break
+            
+            old_diff = o_str[prefix_len:len(o_str) - suffix_len]
+            new_diff = n_str[prefix_len:len(n_str) - suffix_len]
+            prefix = o_str[:prefix_len]
+            suffix = o_str[len(o_str) - suffix_len:] if suffix_len > 0 else ""
+            
+            highlighted_old = f"{prefix}<span style='background-color:#ff0000;color:black;padding:2px'>{old_diff}</span>{suffix}"
+            highlighted_new = f"{prefix}<span style='background-color:#0066cc;color:white;padding:2px'>{new_diff}</span>{suffix}"
+            
+            diff.append(f"<b>{key_fields[i]}:</b><br>{highlighted_old}<br>{highlighted_new}")
+    return "<br><br>".join(diff) if diff else "No key changes"
 
 
 def get_row_by_id(database, row_id):

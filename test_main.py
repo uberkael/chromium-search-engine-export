@@ -18,7 +18,15 @@ def test_padding():
     assert utils.add_spaces(lista) == ['a     ', 'b     ', 'c     ']
 
 
-def test_dynamic_column_handling():
+def test_compare_rows():
+    old_row = (1, 'Google', 'google', 'favicon.ico', 'https://google.es/search?q={searchTerms}', 1, '', 0, 0, 'UTF-8', 'https://google.es/complete/search?q={searchTerms}', 1, 0, 0, 'guid', '[]', '', '', '', '', '', 0, 0, 1, 0, 0, 0)
+    new_row = (1, 'Google', 'google', 'favicon.ico', 'https://google.com/search?q={searchTerms}', 1, '', 0, 0, 'UTF-8', 'https://google.com/complete/search?q={searchTerms}', 1, 0, 0, 'guid', '[]', '', '', '', '', '', 0, 0, 1, 0, 0, 0)
+    
+    diff = utils.compare_rows(old_row, new_row)
+    assert 'URL:' in diff
+    assert 'Suggest URL:' in diff
+    assert 'google.<span style=\'background-color:#ff0000;color:black;padding:2px\'>es</span>/search?q={searchTerms}' in diff
+    assert 'google.<span style=\'background-color:#0066cc;color:white;padding:2px\'>com</span>/search?q={searchTerms}' in diff
     """Test that db_insert_rows handles different column counts correctly."""
 
     # Create two temporary databases with different schemas
