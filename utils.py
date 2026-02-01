@@ -194,15 +194,30 @@ def bytes_to_base64(data):
 
 
 def base64_to_bytes(data):
-    """Convert base64 strings back to bytes objects in nested structures."""
-    if isinstance(data, str):
-        # Try to decode as base64, if it fails, return the original string
-        try:
-            return base64.b64decode(data)
-        except Exception:
-            return data
-    elif isinstance(data, list):
-        return [base64_to_bytes(item) for item in data]
+    """Convert base64 strings back to bytes objects in nested structures
+
+    keyword rows: converts the url_hash field (index 27)
+    Other string fields are preserved
+    """
+    if isinstance(data, list):
+        # Check if this looks like a list of keyword rows
+        if data and isinstance(data[0], (list, tuple)) and len(data[0]) >= 28:
+            # This is a list of keyword rows
+            result = []
+            for row in data:
+                row_list = list(row)
+                # Only convert url_hash (index 27) from base64 to bytes
+                if len(row_list) >= 28 and isinstance(row_list[27], str):
+                    try:
+                        row_list[27] = base64.b64decode(row_list[27])
+                    except Exception:
+                        # No action on failure
+                        pass
+                result.append(row_list)
+            return result
+        else:
+            # Generic list processing
+            return [base64_to_bytes(item) for item in data]
     elif isinstance(data, dict):
         return {key: base64_to_bytes(value) for key, value in data.items()}
     else:
