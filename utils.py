@@ -209,12 +209,109 @@ def base64_to_bytes(data):
         return data
 
 
+def validate_row_for_export(row, seen_guids=None):
+    """Validate a keyword row for export to JSON.
+
+    Ensures the exported data is valid for all Chromium browsers:
+    - Validates critical fields (short_name, keyword, url)
+    - Ensures sync_guid is unique
+    - Converts None to appropriate defaults per field type
+    - Ensures url contains {searchTerms}
+
+    Args:
+        row: Tuple/list representing a keywords table row
+        seen_guids: Set of sync_guids already processed (duplicates)
+    """
+    import uuid
+
+    row_list = list(row)
+
+    # 1. VALIDATE critical fields
+    # short_name (idx 1)
+    if not row_list[1] or (
+        isinstance(row_list[1], str) and not row_list[1].strip()
+    ):
+        raise ValueError(f"Row has empty short_name: {row}")
+
+    # keyword (idx 2)
+    if not row_list[2] or (
+        isinstance(row_list[2], str) and not row_list[2].strip()
+    ):
+        raise ValueError(f"Row has empty keyword for engine: {row_list[1]}")
+
+    # url (idx 4)
+    if not row_list[4] or "{searchTerms}" not in str(row_list[4]):
+        raise ValueError(
+            f"Row has invalid URL (missing {{searchTerms}}) for engine: {row_list[1]}"
+        )
+
+    # 2. NORMALIZE sync_guid (idx 14)
+    if seen_guids is None:
+        seen_guids = set()
+
+    if len(row_list) > 14:
+        current_guid = row_list[14]
+        if not current_guid or current_guid in seen_guids:
+            # Generate new unique UUID
+            new_guid = str(uuid.uuid4())
+            row_list[14] = new_guid
+            if current_guid:
+                # Duplicate
+                print(
+                    f"Warning: Duplicate sync_guid '{current_guid}' for '{row_list[1]}', generated new: {new_guid}"
+                )
+            else:
+                print(
+                    f"Warning: Empty sync_guid for '{row_list[1]}', generated new: {new_guid}"
+                )
+
+        seen_guids.add(row_list[14])
+
+    # Convert fields according to keywords table defaults
+    default_fields = {
+        7: 0,   # date_created
+        8: 0,   # usage_count
+        11: 0,  # prepopulate_id
+        12: 0,  # created_by_policy
+        13: 0,  # last_modified
+        21: 0,  # last_visited
+        22: 0,  # created_from_play_api
+        23: 0,  # is_active
+        24: 0,  # starter_pack_id
+        25: 0,  # enforced_by_policy
+        26: 0,  # featured_by_policy
+    }
+
+    for idx, default_val in default_fields.items():
+        if idx < len(row_list) and row_list[idx] is None:
+            row_list[idx] = default_val
+
+    return tuple(row_list)
+
+
 def json_write(rows, f=BACKUP_FILE):
-    """Write rows to a JSON backup file."""
+    """Write rows to a JSON backup file with validation and normalization."""
+    # Normalize and validate all rows before export
+    seen_guids = set()
+    normalized_rows = []
+
+    for i, row in enumerate(rows):
+        try:
+            validated = validate_row_for_export(row, seen_guids)
+            normalized_rows.append(validated)
+        except ValueError as e:
+            # Log error with context
+            print(f"Error validating row {i}: {e}")
+            raise
+
     # Convert any bytes objects to base64 strings
-    serializable_rows = bytes_to_base64(rows)
+    serializable_rows = bytes_to_base64(normalized_rows)
+
     with open(f, "w", encoding="utf-8") as file:
         json.dump(serializable_rows, file, indent=2)
+
+    # Log summary
+    print(f"Successfully exported {len(normalized_rows)} search engines to {f}")
 
 
 def json_read(f=BACKUP_FILE):
