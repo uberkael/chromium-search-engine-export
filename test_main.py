@@ -7,36 +7,50 @@ import utils
 
 
 def test_browser_names():
-    browsers = ["chrome", "chromium", "brave", "edge", "vivaldi", "opera", "helium"]
+    browsers = [
+        "chrome",
+        "chromium",
+        "brave",
+        "edge",
+        "vivaldi",
+        "opera",
+        "helium",
+    ]
 
     for k in locations.LOCATIONS.keys():
         assert k in browsers
 
 
 def test_padding():
-    lista = ['a', 'b', 'c']
-    assert utils.add_spaces(lista) == ['a     ', 'b     ', 'c     ']
+    lista = ["a", "b", "c"]
+    assert utils.add_spaces(lista) == ["a     ", "b     ", "c     "]
 
 
 def test_compare_rows():
     old_row = (1, 'Google', 'google', 'favicon.ico', 'https://google.es/search?q={searchTerms}', 1, '', 0, 0, 'UTF-8', 'https://google.es/complete/search?q={searchTerms}', 1, 0, 0, 'guid', '[]', '', '', '', '', '', 0, 0, 1, 0, 0, 0)
     new_row = (1, 'Google', 'google', 'favicon.ico', 'https://google.com/search?q={searchTerms}', 1, '', 0, 0, 'UTF-8', 'https://google.com/complete/search?q={searchTerms}', 1, 0, 0, 'guid', '[]', '', '', '', '', '', 0, 0, 1, 0, 0, 0)
-    
+
     diff = utils.compare_rows(old_row, new_row)
-    assert 'URL:' in diff
-    assert 'Suggest URL:' in diff
-    assert 'google.<span style=\'background-color:#ff0000;color:black;padding:2px\'>es</span>/search?q={searchTerms}' in diff
-    assert 'google.<span style=\'background-color:#0066cc;color:white;padding:2px\'>com</span>/search?q={searchTerms}' in diff
+    assert "URL:" in diff
+    assert "Suggest URL:" in diff
+    assert (
+        "google.<span style='background-color:#ff0000;color:black;padding:2px'>es</span>/search?q={searchTerms}"
+        in diff
+    )
+    assert (
+        "google.<span style='background-color:#0066cc;color:white;padding:2px'>com</span>/search?q={searchTerms}"
+        in diff
+    )
     """Test that db_insert_rows handles different column counts correctly."""
 
     # Create two temporary databases with different schemas
     with tempfile.TemporaryDirectory() as tmpdir:
-        db_27_cols = os.path.join(tmpdir, 'db_27.sqlite')
-        db_28_cols = os.path.join(tmpdir, 'db_28.sqlite')
+        db_27_cols = os.path.join(tmpdir, "db_27.sqlite")
+        db_28_cols = os.path.join(tmpdir, "db_28.sqlite")
 
         # Create database with 27 columns (Chromium)
         with sqlite3.connect(db_27_cols) as conn:
-            conn.execute('''
+            conn.execute("""
                 CREATE TABLE keywords (
                     id INTEGER, short_name VARCHAR, keyword VARCHAR, favicon_url VARCHAR,
                     url VARCHAR, safe_for_autoreplace INTEGER, originating_url VARCHAR,
@@ -49,11 +63,11 @@ def test_compare_rows():
                     is_active INTEGER, starter_pack_id INTEGER, enforced_by_policy INTEGER,
                     featured_by_policy INTEGER
                 )
-            ''')
+            """)
 
         # Create database with 28 columns (Edge)
         with sqlite3.connect(db_28_cols) as conn:
-            conn.execute('''
+            conn.execute("""
                 CREATE TABLE keywords (
                     id INTEGER, short_name VARCHAR, keyword VARCHAR, favicon_url VARCHAR,
                     url VARCHAR, safe_for_autoreplace INTEGER, originating_url VARCHAR,
@@ -66,7 +80,7 @@ def test_compare_rows():
                     is_active INTEGER, starter_pack_id INTEGER, enforced_by_policy INTEGER,
                     featured_by_policy INTEGER, url_hash BLOB
                 )
-            ''')
+            """)
 
         # Test data with 27 columns
         test_row_27 = [(1, 'Google', 'google.com', 'favicon.ico', 'https://google.com/search?q={searchTerms}',
