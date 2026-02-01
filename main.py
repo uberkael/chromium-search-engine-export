@@ -62,7 +62,9 @@ def handle_conflicts_dialogs(conflicts):
 <p>URL: {url}</p>
 <p>{diff}</p>"""
         msg_box.setText(text)
-        msg_box.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        msg_box.setStandardButtons(
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
         msg_box.button(QMessageBox.StandardButton.Yes).setText("Replace")
         msg_box.button(QMessageBox.StandardButton.No).setText("Keep Existing")
         response = msg_box.exec()
@@ -85,7 +87,7 @@ def import_into_browser():
         None,
         "Select Web Data file",
         start_path,
-        "Web Data SQLite (Web Data);;All Files (*)",
+        "Web Data SQLite (Web Data*);;All Files (*)",
     )
     if not file_path:
         show_file_error()
@@ -103,9 +105,9 @@ def import_into_browser():
 
     try:
         if to_insert:
-            utils.db_insert_rows(file_path, to_insert, 'ignore')
+            utils.db_insert_rows(file_path, to_insert, "ignore")
         if to_replace:
-            utils.db_insert_rows(file_path, to_replace, 'replace')
+            utils.db_insert_rows(file_path, to_replace, "replace")
         show_success_import(file_path)
     except Exception as e:
         QMessageBox.critical(None, "Error", f"{e}")
@@ -125,7 +127,7 @@ def export_from_browser(bw_sel):
         None,
         "Select Web Data file",
         start_path,
-        "Web Data SQLite (Web Data);;All Files (*)",
+        "Web Data SQLite (Web Data*);;All Files (*)",
     )
     if not file_path:
         show_file_error()
@@ -157,7 +159,9 @@ def setup_dark_theme(app):
     dark_palette.setColor(QPalette.ColorRole.BrightText, QColorConstants.Red)
     dark_palette.setColor(QPalette.ColorRole.Link, QColor(42, 130, 218))
     dark_palette.setColor(QPalette.ColorRole.Highlight, QColor(42, 130, 218))
-    dark_palette.setColor(QPalette.ColorRole.HighlightedText, QColor(35, 35, 35))
+    dark_palette.setColor(
+        QPalette.ColorRole.HighlightedText, QColor(35, 35, 35)
+    )
 
     app.setPalette(dark_palette)
 

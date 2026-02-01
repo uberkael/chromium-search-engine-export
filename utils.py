@@ -2,7 +2,7 @@ import sqlite3
 import json
 import base64
 
-BACKUP_FILE = 'engines.json'
+BACKUP_FILE = "engines.json"
 
 
 def print_rows(rows):
@@ -15,7 +15,7 @@ def db_read_keywords(database):
     """Read rows from the search engine database's `keywords` table."""
     with sqlite3.connect(database) as conn:
         cursor = conn.cursor()
-        cursor.execute('SELECT * FROM keywords;')
+        cursor.execute("SELECT * FROM keywords;")
         return cursor.fetchall()
 
 
@@ -25,21 +25,22 @@ def db_get_existing_ids(database, ids):
         return set()
     with sqlite3.connect(database) as conn:
         cursor = conn.cursor()
-        placeholders = ', '.join(['?'] * len(ids))
-        cursor.execute(f'SELECT id FROM keywords WHERE id IN ({placeholders})', ids)
+        placeholders = ", ".join(["?"] * len(ids))
+        cursor.execute(
+            f"SELECT id FROM keywords WHERE id IN ({placeholders})", ids
+        )
         existing = cursor.fetchall()
         return {row[0] for row in existing}
-
 
 
 def compare_rows(old_row, new_row):
     """Compare two rows and return a diff string for key fields in HTML."""
     key_fields = {
-        1: 'Name',
-        2: 'Shortcut',
-        3: 'Favicon URL',
-        4: 'URL',
-        10: 'Suggest URL'
+        1: "Name",
+        2: "Shortcut",
+        3: "Favicon URL",
+        4: "URL",
+        10: "Suggest URL",
     }
     diff = []
     for i, (o, n) in enumerate(zip(old_row, new_row)):
@@ -52,26 +53,30 @@ def compare_rows(old_row, new_row):
                     prefix_len += 1
                 else:
                     break
-            
+
             # Find common suffix
             suffix_len = 0
             o_str = str(o)
             n_str = str(n)
-            for j in range(1, min(len(o_str) - prefix_len, len(n_str) - prefix_len) + 1):
+            for j in range(
+                1, min(len(o_str) - prefix_len, len(n_str) - prefix_len) + 1
+            ):
                 if o_str[-j] == n_str[-j]:
                     suffix_len += 1
                 else:
                     break
-            
-            old_diff = o_str[prefix_len:len(o_str) - suffix_len]
-            new_diff = n_str[prefix_len:len(n_str) - suffix_len]
+
+            old_diff = o_str[prefix_len : len(o_str) - suffix_len]
+            new_diff = n_str[prefix_len : len(n_str) - suffix_len]
             prefix = o_str[:prefix_len]
-            suffix = o_str[len(o_str) - suffix_len:] if suffix_len > 0 else ""
-            
+            suffix = o_str[len(o_str) - suffix_len :] if suffix_len > 0 else ""
+
             highlighted_old = f"{prefix}<span style='background-color:#ff0000;color:black;padding:2px'>{old_diff}</span>{suffix}"
             highlighted_new = f"{prefix}<span style='background-color:#0066cc;color:white;padding:2px'>{new_diff}</span>{suffix}"
-            
-            diff.append(f"<b>{key_fields[i]}:</b><br>{highlighted_old}<br>{highlighted_new}")
+
+            diff.append(
+                f"<b>{key_fields[i]}:</b><br>{highlighted_old}<br>{highlighted_new}"
+            )
     return "<br><br>".join(diff) if diff else "No key changes"
 
 
@@ -79,7 +84,7 @@ def get_row_by_id(database, row_id):
     """Get a row by id from keywords table."""
     with sqlite3.connect(database) as conn:
         cursor = conn.cursor()
-        cursor.execute('SELECT * FROM keywords WHERE id = ?', (row_id,))
+        cursor.execute("SELECT * FROM keywords WHERE id = ?", (row_id,))
         return cursor.fetchone()
 
 
@@ -87,7 +92,7 @@ def get_row_by_shortcut(database, shortcut):
     """Get a row by shortcut from keywords table."""
     with sqlite3.connect(database) as conn:
         cursor = conn.cursor()
-        cursor.execute('SELECT * FROM keywords WHERE keyword = ?', (shortcut,))
+        cursor.execute("SELECT * FROM keywords WHERE keyword = ?", (shortcut,))
         return cursor.fetchone()
 
 
@@ -95,7 +100,7 @@ def get_row_by_url(database, url):
     """Get a row by url from keywords table."""
     with sqlite3.connect(database) as conn:
         cursor = conn.cursor()
-        cursor.execute('SELECT * FROM keywords WHERE url = ?', (url,))
+        cursor.execute("SELECT * FROM keywords WHERE url = ?", (url,))
         return cursor.fetchone()
 
 
@@ -103,7 +108,7 @@ def get_row_by_name(database, name):
     """Get a row by name from keywords table."""
     with sqlite3.connect(database) as conn:
         cursor = conn.cursor()
-        cursor.execute('SELECT * FROM keywords WHERE short_name = ?', (name,))
+        cursor.execute("SELECT * FROM keywords WHERE short_name = ?", (name,))
         return cursor.fetchone()
 
 
@@ -111,7 +116,7 @@ def get_existing_shortcuts(database):
     """Get set of existing shortcuts from keywords table."""
     with sqlite3.connect(database) as conn:
         cursor = conn.cursor()
-        cursor.execute('SELECT keyword FROM keywords')
+        cursor.execute("SELECT keyword FROM keywords")
         return {row[0] for row in cursor.fetchall()}
 
 
@@ -119,7 +124,7 @@ def get_existing_urls(database):
     """Get set of existing urls from keywords table."""
     with sqlite3.connect(database) as conn:
         cursor = conn.cursor()
-        cursor.execute('SELECT url FROM keywords')
+        cursor.execute("SELECT url FROM keywords")
         return {row[0] for row in cursor.fetchall()}
 
 
@@ -127,11 +132,11 @@ def get_existing_names(database):
     """Get set of existing names from keywords table."""
     with sqlite3.connect(database) as conn:
         cursor = conn.cursor()
-        cursor.execute('SELECT short_name FROM keywords')
+        cursor.execute("SELECT short_name FROM keywords")
         return {row[0] for row in cursor.fetchall()}
 
 
-def db_insert_rows(database, rows, mode='ignore'):
+def db_insert_rows(database, rows, mode="ignore"):
     """Insert multiple rows into the search engine `keywords` table.
 
     mode: 'ignore' to skip existing, 'replace' to update existing.
@@ -140,7 +145,7 @@ def db_insert_rows(database, rows, mode='ignore'):
         cursor = conn.cursor()
 
         # Get the table schema to determine the number of columns
-        cursor.execute('PRAGMA table_info(keywords);')
+        cursor.execute("PRAGMA table_info(keywords);")
         columns_info = cursor.fetchall()
         column_names = [col[1] for col in columns_info]
         num_columns = len(column_names)
@@ -161,22 +166,25 @@ def db_insert_rows(database, rows, mode='ignore'):
             adjusted_rows.append(tuple(row_list))
 
         # Build the INSERT statement dynamically
-        columns_str = ', '.join(column_names)
-        placeholders = ', '.join(['?'] * num_columns)
+        columns_str = ", ".join(column_names)
+        placeholders = ", ".join(["?"] * num_columns)
 
-        or_clause = 'OR REPLACE' if mode == 'replace' else 'OR IGNORE'
+        or_clause = "OR REPLACE" if mode == "replace" else "OR IGNORE"
 
-        cursor.executemany(f'''
+        cursor.executemany(
+            f"""
             INSERT {or_clause} INTO keywords ({columns_str})
             VALUES ({placeholders})
-        ''', adjusted_rows)
+        """,
+            adjusted_rows,
+        )
         conn.commit()
 
 
 def bytes_to_base64(data):
     """Convert bytes objects in nested structures to base64 strings."""
     if isinstance(data, bytes):
-        return base64.b64encode(data).decode('utf-8')
+        return base64.b64encode(data).decode("utf-8")
     elif isinstance(data, (list, tuple)):
         return [bytes_to_base64(item) for item in data]
     elif isinstance(data, dict):
@@ -205,15 +213,15 @@ def json_write(rows, f=BACKUP_FILE):
     """Write rows to a JSON backup file."""
     # Convert any bytes objects to base64 strings
     serializable_rows = bytes_to_base64(rows)
-    with open(f, 'w', encoding='utf-8') as file:
+    with open(f, "w", encoding="utf-8") as file:
         json.dump(serializable_rows, file, indent=2)
 
 
 def json_read(f=BACKUP_FILE):
     """Read rows from a JSON backup file."""
-    with open(f, 'r', encoding='utf-8') as file:
+    with open(f, "r", encoding="utf-8") as file:
         rows = json.load(file)
-        # rows = convert_base64_to_bytes(rows)
+        rows = base64_to_bytes(rows)
         return rows
 
 
@@ -230,45 +238,52 @@ def compare_data(rows1, rows2):
 
         for j in range(len(rows1[i])):
             if rows1[i][j] != rows2[i][j]:
-                return False, f"Difference found at row {i}, column {j}: {rows1[i][j]} != {rows2[i][j]}"
+                return (
+                    False,
+                    f"Difference found at row {i}, column {j}: {rows1[i][j]} != {rows2[i][j]}",
+                )
 
     return True, "The arrays are equal."
 
 
 def handle_import_conflicts(file_path, filas):
     """Prepare data for import and identify conflicts and new entries.
-    
+
     Returns: (to_insert, conflicts) where conflicts is list of (key, old_row, new_row)
     """
     existing_shortcuts = get_existing_shortcuts(file_path)
-    
+
     conflicts = []
     to_insert = []
-    
+
     def has_key_changes(old_row, new_row):
         key_indices = {1, 2, 3, 4, 10}
         for i in key_indices:
-            if i < len(old_row) and i < len(new_row) and old_row[i] != new_row[i]:
+            if (
+                i < len(old_row)
+                and i < len(new_row)
+                and old_row[i] != new_row[i]
+            ):
                 return True
         return False
-    
+
     for row in filas:
         shortcut = row[2]
         conflict_found = False
-        
+
         # Check shortcut conflict
         if shortcut and shortcut in existing_shortcuts:
             old_row = get_row_by_shortcut(file_path, shortcut)
             if has_key_changes(old_row, row):
                 conflicts.append((f"Shortcut: {shortcut}", old_row, row))
                 conflict_found = True
-        
+
         if not conflict_found:
             to_insert.append(row)
-    
+
     return to_insert, conflicts
 
 
 def add_spaces(lista, spaces=5):
     """Append `spaces` number of spaces to each string in `lista`."""
-    return [item + ' ' * spaces for item in lista]
+    return [item + " " * spaces for item in lista]
